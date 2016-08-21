@@ -49,7 +49,8 @@ class TestController extends Controller {
 		$data['receiver_lat'] = 0;
 		$data['receiver_lng'] = 0;
 		// $data['callback'] = 'http://192.168.1.113/food2send/API/public/v1/dadaback';
-		$data['callback'] = 'http://www.baidu.com';
+		// $data['callback'] = 'http://www.baidu.com';
+		$data['callback'] = env("DADA_CALLBACK_URL");
 		$res = $dada->request($url, $data);
 		print_r($res);die;
 	}
