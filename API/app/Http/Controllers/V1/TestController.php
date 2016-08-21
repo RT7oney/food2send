@@ -60,6 +60,7 @@ class TestController extends Controller {
 		$com = new CommonFunc;
 		$order_id = $request->input('order_id');
 		if ($order_id) {
+			print_r($_POST);
 			$res = $com->socketRequest(env("MAIN_HOST"), env("PORT_DADA_CALLBACK"), array($order_id));
 			print_r($res);die;
 		}
