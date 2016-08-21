@@ -21,7 +21,9 @@ $tcp_worker->onMessage = function ($connection, $data) {
 		$msg = array('code' => '100010400', 'msg' => 'error');
 	}
 	$connection->send(json_encode($msg));
-	$connection->close();
+	if ($data['client'] != 'ryan') {
+		$connection->close();
+	}
 };
 Worker::$stdoutFile = '/alidata/log/food2send/10001-' . date('Ym') . '.log';
 // 运行worker
