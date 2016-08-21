@@ -23,6 +23,6 @@ $tcp_worker->onMessage = function ($connection, $data) {
 	$connection->send(json_encode($msg));
 	$connection->close();
 };
-Worker::$stdoutFile = '/var/log/workerman/10072-' . date('Ym') . '.log';
+Worker::$stdoutFile = '/alidata/log/food2send/10001-' . date('Ym') . '.log';
 // 运行worker
 Worker::runAll();
