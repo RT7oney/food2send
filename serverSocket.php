@@ -2,9 +2,9 @@
 error_reporting(E_ALL & ~E_NOTICE);
 ob_implicit_flush();
 set_time_limit(0);
-$room = new ChatRoom('192.168.1.113', 9999);
-$room->run();
-class Listen {
+$server = new Server('127.0.0.1', 10000);
+$server->run();
+class Server {
 	public $master;
 	public $users;
 	public $sockets;
@@ -24,111 +24,120 @@ class Listen {
 	 */
 	public function run() {
 		while (true) {
-			echo "--------this is the $this->while_flag times WHILE circle!--------\n";
-			echo "--------this->sockets----------\n";
-			var_dump($this->sockets);
-			echo "-------------------------------\n";
-			echo "--------this->users----------\n";
-			var_dump($this->users);
-			echo "-------------------------------\n";
+			// echo "--------this is the $this->while_flag times WHILE circle!--------\n";
+			// echo "--------this->sockets----------\n";
+			// var_dump($this->sockets);
+			// echo "-------------------------------\n";
+			// echo "--------this->users----------\n";
+			// var_dump($this->users);
+			// echo "-------------------------------\n";
 
 			$changes = $this->sockets; //放在一个变化数组里面等待其变化，是文件描述符集合
 			// $changes[] = $this->master; //放在一个变化数组里面等待其变化，是文件描述符集合
-			echo "#36-------------changes------------\n";
-			var_dump($changes);
-			echo "-------------------------------\n";
+			// echo "#36-------------changes------------\n";
+			// var_dump($changes);
+			// echo "-------------------------------\n";
 			$select_check = socket_select($changes, $write = NULL, $except = NULL, NULL); //socket_select函数可以等待套接字改变状态
 			if (!$select_check) {
 				$this->log("socket_select() failed ,reason:" . socket_strerror(socket_last_error()));
 				die;
 			}
 			foreach ($changes as $k => $sock) {
-				echo "--------this is the $this->foreach_flag times FOREACH circle!--------";
-				echo "#46---------sock--------\n";
-				var_dump($sock);
-				echo "-------------------------------\n";
-				echo "#49?????????sock==this->master??????????\n";
-				var_dump($sock == $this->master);
-				echo "-------------------------------\n";
+				// echo "--------this is the $this->foreach_flag times FOREACH circle!--------";
+				// echo "#46---------sock--------\n";
+				// var_dump($sock);
+				// echo "-------------------------------\n";
+				// echo "#49?????????sock==this->master??????????\n";
+				// var_dump($sock == $this->master);
+				// echo "-------------------------------\n";
 				if ($sock == $this->master) {
 					//如果请求来自监听端口的套接字，则创建一个接受下来创建一个新的套接字用来通信
 					//每次新增一个用户的时候都走这一条
 					$client = socket_accept($sock);
-					echo "#56------------client------------\n";
-					var_dump($client);
-					echo "-------------------------------\n";
+					// echo "#56------------client------------\n";
+					// var_dump($client);
+					// echo "-------------------------------\n";
 					$this->sockets[] = $client;
 					$this->users[] = array(
 						'socket' => $client,
-						'is_hand_shake' => false,
+						// 'is_hand_shake' => false,
 					);
 				} else {
-					$searched_key = $this->searchUser($sock); //寻找用户组是否已经存在该socket，如果不存在创建，如果存在选取k
-					if ($searched_key !== false) {
-						$k = $searched_key;
+					// $searched_key = $this->searchUser($sock); //寻找用户组是否已经存在该socket，如果不存在创建，如果存在选取k
+					// if ($searched_key !== false) {
+					// 	$k = $searched_key;
+					// }
+
+					########################################
+
+					$tmp = socket_read($sock, 8192);
+					if (strlen($tmp) > 0) {
+						$this->sendMsg('server', 'all', $tmp);
 					}
-					echo "#69-------------searched_key and k--------------\n";
-					var_dump($searched_key);
-					echo "\n";
-					var_dump($k);
-					echo "-------------------------------\n";
+					########################################
 
-					echo "#75-------------0  buffer-----------\n";
-					var_dump($buffer);
-					echo "-------------------------------\n";
+					// echo "#69-------------searched_key and k--------------\n";
+					// var_dump($searched_key);
+					// echo "\n";
+					// var_dump($k);
+					// echo "-------------------------------\n";
 
-					$recv_bytes = socket_recv($sock, $buffer, 4096, 0);
-					if (!$recv_bytes) {
-						$this->log("socket_recv() failed ,reason:" . socket_strerror(socket_last_error($sock)));
-					}
+					// echo "#75-------------0  buffer-----------\n";
+					// var_dump($buffer);
+					// echo "-------------------------------\n";
 
-					echo "#84------------1  buffer-----------\n";
-					var_dump($buffer);
-					echo "-------------------------------\n";
+					// $recv_bytes = socket_recv($sock, $buffer, 4096, 0);
+					// if (!$recv_bytes) {
+					// 	$this->log("socket_recv() failed ,reason:" . socket_strerror(socket_last_error($sock)));
+					// }
 
-					echo "#75-------------recv_bytes--------------\n";
-					var_dump($recv_bytes);
-					echo "-------------------------------\n";
-					$this->log("socket_recv() the recv_bytes : $recv_bytes");
-					if ($recv_bytes < 0 || $recv_bytes < 7) {
-//TODO为什么是7？
-						//接收到的消息字节为零
-						$this->close($sock);
-						$this->dealMsg($k, 'type=remove');
-						// continue;
-					} else {
-						//接受到了消息
-						if (!$this->users[$k]['is_hand_shake']) {
-							//没有握手去握手
-							echo "#102---------握手 buffer--------\n";
-							var_dump($buffer);
-							echo "-------------------------------\n";
-							$ret = $this->handShake($k, $buffer);
-							if (!$ret) {
-								die('handShake failed');
-							}
-						} else {
-							//握手之后解码消息
-							echo "#111---------消息 buffer--------\n";
-							var_dump($buffer);
-							echo "-------------------------------\n";
-							$ret = $this->decode($buffer);
-							echo "#115--------解码 ret--------\n";
-							var_dump($ret);
-							echo "-------------------------------\n";
-							if ($ret) {
-								$this->dealMsg($k, $ret);
-							} else {
-								// $this->close($sock);
-								// die('decode msg failed');
-								$this->log('why decode msg ??? ' . $ret);
-							}
-						}
-					}
+					// echo "#84------------1  buffer-----------\n";
+					// var_dump($buffer);
+					// echo "-------------------------------\n";
+
+					// echo "#75-------------recv_bytes--------------\n";
+					// var_dump($recv_bytes);
+					// echo "-------------------------------\n";
+					// $this->log("socket_recv() the recv_bytes : $recv_bytes");
+					// 					if ($recv_bytes < 0 || $recv_bytes < 7) {
+					// //TODO为什么是7？
+					// 						//接收到的消息字节为零
+					// 						$this->close($sock);
+					// 						// $this->dealMsg($k, 'type=remove');
+					// 						// continue;
+					// 					} else {
+					// 						//接受到了消息
+					// 						// if (!$this->users[$k]['is_hand_shake']) {
+					// 						// 	//没有握手去握手
+					// 						// 	echo "#102---------握手 buffer--------\n";
+					// 						// 	var_dump($buffer);
+					// 						// 	echo "-------------------------------\n";
+					// 						// 	$ret = $this->handShake($k, $buffer);
+					// 						// 	if (!$ret) {
+					// 						// 		die('handShake failed');
+					// 						// 	}
+					// 						// } else {
+					// 							//握手之后解码消息
+					// 							// echo "#111---------消息 buffer--------\n";
+					// 							// var_dump($buffer);
+					// 							// echo "-------------------------------\n";
+					// 							// $ret = $this->decode($buffer);
+					// 							// echo "#115--------解码 ret--------\n";
+					// 							// var_dump($ret);
+					// 							// echo "-------------------------------\n";
+					// 							// if ($ret) {
+					// 							// 	$this->dealMsg($k, $ret);
+					// 							// } else {
+					// 							// 	// $this->close($sock);
+					// 							// 	// die('decode msg failed');
+					// 							// 	$this->log('why decode msg ??? ' . $ret);
+					// 							// }
+					// 						// }
+					// 					}
 				}
-				$this->foreach_flag++;
+				// $this->foreach_flag++;
 			}
-			$this->while_flag++;
+			// $this->while_flag++;
 		}
 	}
 
