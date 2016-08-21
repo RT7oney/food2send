@@ -19,5 +19,5 @@ $app->get('/index', 'IndexController@index');
 $app->group(['middleware' => 'check', 'prefix' => 'v1', 'namespace' => 'App\Http\Controllers\V1'], function ($app) {
 	$app->get('/eleme', 'TestController@eleme');
 	$app->get('/dada', 'TestController@dada');
-	$app->get('/dadaback', 'TestController@dadaback');
+	$app->post('/dadaback', 'TestController@dadaback');
 });

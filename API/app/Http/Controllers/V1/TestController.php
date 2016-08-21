@@ -55,10 +55,11 @@ class TestController extends Controller {
 		print_r($res);die;
 	}
 
-	public function dadaback() {
+	public function dadaback(Request $request) {
 		$com = new CommonFunc;
-		if (isset($_POST['order_id'])) {
-			$res = $com->socketRequest(env("MAIN_HOST"), env("PORT_DADA_CALLBACK"), $_POST);
+		$order_id = $request->input('order_id');
+		if ($order_id) {
+			$res = $com->socketRequest(env("MAIN_HOST"), env("PORT_DADA_CALLBACK"), array($order_id));
 			print_r($res);die;
 		}
 	}
