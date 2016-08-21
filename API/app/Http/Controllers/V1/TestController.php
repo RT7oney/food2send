@@ -5,6 +5,7 @@ use App\Common\CommonFunc;
 use App\Common\DadaApi;
 use App\Common\ElemeApi;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 
 class TestController extends Controller {
 
